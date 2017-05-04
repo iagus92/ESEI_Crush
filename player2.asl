@@ -48,56 +48,6 @@ especialTeH(C,X,Y) :- especial(C,X,Y,_) | especial(C,X+1,Y,_) | especial(C,X+3,Y
 /* Initial goals */
 
 /* Plans */
-// Intercambio con especial para T horizontal.
-+!intercambiar : teH(C,X,Y,X1,X2) & steak(_,X2,Y) & especialTeH(C,X,Y)
-	<- .print("-----SOLICITA intercambio ESP T horizontal------",C,", ",X2,", ",Y);
-	   .send(judge,tell,exchange(X1,Y,X2,Y)).
-
-// Intercambio con especial para T vertical.
-+!intercambiar : teV(C,X,Y,Y1,Y2) & steak(_,X,Y2) & especialTeV(C,X,Y)
-	<- .print("-----SOLICITA intercambio ESP T vertical------",C,", ",X,", ",Y2);
-	   .send(judge,tell,exchange(X,Y1,X,Y2)).	
-
-// Intercambio con especial para fila de 5.
-+!intercambiar : contiguas5H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial5H(C,X,Y,X1,Y1)
-	<- .print("-----SOLICITA intercambio ESP 5 vertical------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)).	
-
-// Intercambio con especial para columna de 5.
-+!intercambiar : contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial5V(C,X,Y,X1,Y1)
-	<- .print("-----SOLICITA intercambio ESP 5 vertical------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)).  
-  
-// Intercambio con especial para columna de 4.
-+!intercambiar : contiguas4V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial4V(C,X,Y,X1,Y1)
-	<- .print("-----SOLICITA intercambio ESP 4 vertical------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)).
-
-// Intercambio con especial para fila de 4.
-+!intercambiar : contiguas4H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial4H(C,X,Y,X1,Y1)
-	<- .print("-----SOLICITA intercambio ESP 4 horizontal------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)).
-
-// Intercambio con especial para fila de 3 por la izquierda.
-+!intercambiar : contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY) & especial3HI(C,X1,Y)
-	<- .print("-----SOLICITA intercambio ESP 3 izquierda------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X1-1,Y,NewX,NewY)).
-	
-// Intercambio con especial para fila de 3 por la derecha.
-+!intercambiar : contiguas3H(C,X1,X2,Y,Y) & steak(_,X2+1,Y) & tresDcha(C,X2,Y,NewX,NewY) & especial3HD(C,X1,Y)
-	<- .print("-----SOLICITA intercambio ESP 3 derecha------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X2+1,Y,NewX,NewY)).
-
-// Intercambio con especial para columna de 3 por abajo.
-+!intercambiar : contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y2+1) & tresAbajo(C,X,Y2,NewX,NewY) & especial3VAb(C,X,Y1)
-	<- .print("-----SOLICITA intercambio ESP 3 abajo------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X,Y2+1,NewX,NewY)).
-	
-// Intercambio con especial para columna de 3 por arriba.
-+!intercambiar : contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & especial3VAr(C,X,Y1)
-	<- .print("-----SOLICITA intercambio ESP 3 arriba------",C,", ",NewX,", ",NewY);
-	   .send(judge,tell,exchange(X,Y1-1,NewX,NewY)).
-
 // Intercambio para columna de 5.
 +!intercambiar : contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 5 vertical------",C,", ",NewX,", ",NewY);
