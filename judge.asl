@@ -1,30 +1,18 @@
 // Agent judge in project crush.mas2j
 
 /* Initial beliefs and rules */
-//points(player1,-1).
-//points(player2,-1).
 
-//movs(player1,0).
-//movs(player2,0).
-winner1 :-
-	points(player1,P1) & 
-	sizeof(N) & 
-	celdas1(C1) & 
-	(C1 > N*N*3/4) & 
-	P1 > 99.
-
-winner2 :-
-	points(player2,P2) & 
-	sizeof(N) & 
-	celdas12(C2) & 
-	(C2 > N*N*3/4) & 
-	P2 > 99.
-	
 endOfGame :- 
 	//.print("VERIFICANDO END OF GAME ========================================================>") &
 	movs(player1,M1)  & 
 	movs(player2,M2) &
-	((M1 > 9 & M2> 9) | winner1 | winner2 ) &
+	points(player1,P1) & 
+	points(player2,P2) &
+	sizeof(N) & 
+	celdas1(C1) & 
+	celdas2(C2) &
+	movs(Movs) &
+	((M1 > Movs & M2> Movs) | ((C1 > N*N*3/4)& P1 > 99) | ((C2 > N*N*3/4)& P2 > 99) ) &
 	.print("Porque entre aqui?????",M1," , ",P1," , ",C1) &
 	.print("Porque entre aqui?????",M2," , ",P2," , ",C2).
 //endOfGame :- movs(M) & points(P) & P > 99.
@@ -83,9 +71,9 @@ inT(X,Y,X1,Y1,D) :- lineH(X,Y,C,S,3) & X1 = S & Y1 = Y   & lineV(X1,Y1,C,Y1-1,3)
 
 mapa(L) :- mapa1(L) | mapa2(L).
 
-mapa2([[  16, 32,   16,   32,   64,   65,   16,   32, 512, 256],
-             [128,   4, 256, 512,   16, 256, 512,     4,   32,   64],
-	         [128, 16,   32, 256, 512, 512, 256, 128,   64,   64],
+mapa2([[       16, 32,   16,   32,   64,   65,   16,   32, 512, 256],
+             [128,   4, 32, 512,   32, 32, 512,     4,   32,   64],
+	         [128, 16,   32, 16, 512, 512, 256, 128,   64,   64],
 	         [ 32, -32,   17, 128,   33, 512, 256, 128, 128,   17],
 	         [ 64,  64,   32, 128,   32,   16, 512, 256, 128,   65],
              [128,   4, 256, 512,  -64, 256,-512,     4,   32,   32],
@@ -102,9 +90,9 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	   [ 64, 64, 32,-128, -32, -16,-512,256,128, 64],
        [128, 64,256,-512, -16,-256,-512,512, 32,128],
 	   [128, 16, 32, -32,-512,-512,-256,128, 64, 64],
-	   [ 33, 32, 128, 32, 32,512,256,128,128, 17],
+	   [ 33, 16, 128, 32, 32,512,256,128,128, 17],
 	   [ 65, -64, 32,128, 32, 16,512,256,-128, 65],
-	   [257,257,129,32, 64,512,512, 65, 33, 65]]).
+	   [257,257,129,128, 64,512,512, 65, 33, 65]]).
 
 /* Initial goals */
 
@@ -118,54 +106,78 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	+turn(0);
 	for (.member(Player,L)){
 		if (not Player ==judge) {
-		.print("En esta partida juega el agente: ",Player);
-		?turn(T);
-		+player(T,Player);
-		+movs(Player,0);
-		+points(Player,0);
-		//+pointsMov(Player,0);
-		.send(Player,tell,turn(T));
-		-+turn((T+1) mod 2);
-		.print("El agente: ", Player," juega con turno: ", T);
-		}
-		else {.print("Arbitra el agente: ", Player);};
-	};	
+			.print("En esta partida juega el agente: ",Player);
+			?turn(T);
+			+player(T,Player);
+			+movs(Player,0);
+			+points(Player,0);
+			//+pointsMov(Player,0);
+			.send(Player,tell,turn(T));
+			-+turn((T+1) mod 2);
+			.print("El agente: ", Player," juega con turno: ", T);
+		} else {
+			.print("Arbitra el agente: ", Player);
+		};
+	};
+	+winner1(0);
+	+winner2(0);	
 	-+turn(0);
-	.wait(1000);
-	!level1;
-	//!level2;
+	+level(1);
+	.wait(5000);
+	/*!level1;
+	!winner;*/
+	!clearMovs;
+	!clearSpecials;
+	-+level(2);
+	!level2;
 	!winner.
 	
++!winner : 	points(player1,Pt1) & points(player2,Pt2) & winner1(W1) & winner2(W2) &
+			celdas1(Cel1) & celdas2(Cel2) & sizeof(N) & level(L) <-
+	if ((Cel1 > N*N*3/4) & Pt1 > 100) {
+		-+winner1(W1+1);
+		.print("En el Nivel:", L," ha ganado el player1 con: ", Cel1, " celdas dominadas y ",Pt1," puntos conseguidos.");
+	} else {
+		if ((Cel2 > N*N*3/4) & Pt2 > 100) {
+			-+winner2(W2+1);
+			.print("En el Nivel:", L," ha ganado el player2 con: ", Cel2, " celdas dominadas y ",Pt2," puntos conseguidos.");
+		} else {
+			.print("En el Nivel:", L," no hay ganadores. El player1 suma ",Pt1," puntos y el player2:", Pt2, " puntos.");
+		}
+	};
+	.wait(2000);
+	if (L == 2) {
+		?winner1(G1);
+		?winner2(G2);
+		if ((G1 > G2) | (G1==G2 & Pt1>Pt2)){
+			.print("EL GANADOR ES EL PLAYER1 CON ",G1," PARTIDAS GANADAS Y ",Pt1," PUNTOS ACUMULADOS,");
+		} else {
+			if ((G2 > G1) | (G1==G2 & Pt2>Pt1)){
+				.print("EL GANADOR ES EL PLAYER2 CON ",G2," PARTIDAS GANADAS Y ",Pt2," PUNTOS ACUMULADOS,");
+			} else {
+				.print("NO HAY GANADOR EL PLAYER1 Y EL PLAYER2 GANARON ",G1,",",G2," PARTIDAS.");
+				.print("Y CONSIGUIERON: ",Pt1,",",Pt2," PUNTOS ACUMULADOS.");
+			}
+		}
+	}.
+
 +!level1 : mapa1(Mapa) <-
 	!iniciarTablero (Mapa) ;
+	-+movs(15);
 	 //-+turn(0);
-	 !removeSteak(3,0);
-	!putSteak(3,0,32,4);
 	.broadcast(tell,canExchange(0));
 	.wait(endOfGame);
 	.broadcast(tell,stop);
 	.wait(500);
 	!getPuntos(Player1,Player2);
 	!getMovs(Mov1,Mov2);
-	.print("Fin do level1. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
-	.print("Fin do level1. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.");
-	if (winner1) {
-		.print("Ganou o xogador 1");
-		+winner1(1);
-	} else {
-		if (winner2) {
-			.print("Ganou o xogador 2");
-			+winner2(1);
-		} else {
-			.print("Non hai gañador.");
-			+winner1(0);
-			+winner2(0);
-		}
-	}.
+	.print("Fin do xogo. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
+	.print("Fin do xogo. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.").
 
 +!level2 : mapa2(Mapa) <-
 	.wait(5000);
 	!iniciarTablero (Mapa) ;
+	-+movs(20);
 	-+turn(0);
 	.broadcast(tell,canExchange(0));
 	.wait(endOfGame);
@@ -174,48 +186,20 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	!getPuntos(Player1,Player2);
 	!getMovs(Mov1,Mov2);
 	.print("Fin do xogo. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
-	.print("Fin do xogo. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.");
-	if (winner1) {
-		.print("No Nivel 2 o vencedor foi o xogador 1");
-		?winner1(X);
-		-+winner1(X+1);
-	} else {
-		if (winner2) {
-			.print("No Nivel 2 o vencedor foi o xogador 2");
-			?winner2(X);
-			-+winner2(X+1);
-		} else {
-			.print("Empate no nivel 2.");
-		}
-	}.
-
-+!winner: winner1(W1) & winner2(W2) & points(player1,Pt1) & points(player2,Pt2) <-
-	if ((W1 > W2) | (W1==W2 & Pt1 > Pt2)) {
-		.print("O ganador é o xogador 1.");
-	};
-	if ((W2 > W1) | (W1==W2 & Pt1 < Pt2)) {
-		.print("O ganador é o xogador 1.");
-	};
-	if (W1 == W2 & Pt1 == Pt2) {
-		.print("EMPATEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-	}.
-	
+	.print("Fin do xogo. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.").
 	
 /*****************************************************************/
 /********************     Iniciar Taboleiro    *******************/
 /*****************************************************************/	
 +!iniciarTablero(Mapa) 
 	<-
-	-+celdas1(0);
-	-+celdas2(0);	
+	+celdas1(0);
+	+celdas2(0);	
 	.wait(200);
 	?celdas1(C1);
 	?celdas2(C2);
 	!recorreMapa(Mapa);
-	//?promotionTo(X);
-	//-promotionTo(X);
-	+promotionTo(0);
-	!startMovs;
+	-+promotionTo(0);
 	!startPuntos.
 
 //Rutina para xerar o taboleiro automaticamente	(comentar a de arriba)
@@ -243,26 +227,37 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	?chooseC(C);
 	.print("Recibin de ", Source, " a solicitude de colocar un steak ",C," en: ", X,",",0);
 	.wait(50);
-	.print("Poño ficha ",C," en ",X);
+	.print("Poï¿½o ficha ",C," en ",X);
 	!putSteak(X,0,C,0).
 
 +putSteak(X,Y)[source(Source)] : not steak(_,X,Y) <-
 	?chooseC(C);
 	.print("Recibin de ", Source, " a solicitude de colocar un steak ",C," en: ", X,",",Y);
 	.wait(50);
-	.print("Poño ficha ",C," en ",X);
+	.print("Poï¿½o ficha ",C," en ",X);
 	!putSteak(X,Y,C,0).
 	
 +putSteak(X,Y,C)[source(Source)] : not steak(C,X,Y) <-
 	.print("Recibin de ", Source, " a solicitude de colocar un steak ",C," en: ", X,",",Y);
 	.wait(50);
-	.print("Poño ficha ",C," en ",X,",",Y);
+	.print("Poï¿½o ficha ",C," en ",X,",",Y);
 	!putSteak(X,Y,C,0).
 
 /*****************************************************************/	
 /********************  Intercambio de Fichas   *******************/
 /*****************************************************************/	
 +exchange(X1,Y1,X2,Y2)[source(Source)] : endOfGame.
+
++exchange(X1,Y1,X2,Y2)[source(Source)] : 
+	player(T,Source) & turn(T) &
+	steak(4,X1,Y1) | steak(4,X2,Y2)
+	<-
+	.abolish(exchange(X1,Y1,X2,Y2));
+	.print("Recibin de ", Source, " a solicitude de intercambiar un obstï¿½culo: ",C1," en ", X1, ", ",Y1," o ", C2, " en ", X2, ", ",Y2);
+	-+accionIlegal(Source);
+	?movs(Source,M1);
+	.send(Source,tell,tryAgain).
+
 +exchange(X1,Y1,X2,Y2)[source(Source)] : 
 	player(T,Source) & turn(T) &
 	steak(C1,X1,Y1) & steak(C2,X2,Y2) & not C1 == C2 & contiguas(X1,X2,Y1,Y2) 
@@ -271,23 +266,24 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.print("Recibin de ", Source, " a solicitude de intercambiar o steak ", C1, " en: ", X1, ", ",Y1," por o steak ", C2, " en: ", X2, ", ",Y2, " que vou atender inmediatamente.");
 	if (X1==X2) {-+dir(0);};
 	if (Y1==Y2) {-+dir(1);};
+	.wait(1000);
 	!exchangeSteak(X1,Y1,X2,Y2);
 	.print("Feito o intercambio.");
 	!addMov;
 	.wait(50);
 	?turn(T);
 	if (player(T+1,X1,Y1) | player(T+1,X2,Y2)) {
-		+promotionTo(T+1)
+		-+promotionTo(T+1)
 	} else {
 		if ((player(P,X1,Y1) & not P==T+1) |
 			(player(P,X2,Y2) & not P==T+1) ){
-			+promotionTo(P)
+			-+promotionTo(P)
 		} else {
-			+promotionTo(0);		
+			-+promotionTo(0);		
 		}
 	};
 	!checkForActions(C2,X1,Y1);
-	//.wait(50);
+	.wait(50);
 	!checkForActions(C1,X2,Y2);	
 	//.wait(2000);
 	?movs(Source,M1);
@@ -308,7 +304,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.abolish(exchange(X1,Y1,X2,Y2));
 	.print("Recibin de ", Source, " a solicitude de intercambiar dous steak que non son contiguos: ", X1, ", ",Y1," e ", X2, ", ",Y2);
 	-+accionIlegal(Source);
-	?movs(M);
+	?movs(Source,M1);
 	.send(Source,tell,tryAgain).
 	
 +exchange(X1,Y1,X2,Y2)[source(Source)] : 
@@ -318,19 +314,9 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.abolish(exchange(X1,Y1,X2,Y2));
 	.print("Recibin de ", Source, " a solicitude de intercambiar dous steak que son da mesma cor: ",C1," en ", X1, ", ",Y1," e ", C2, " en ", X2, ", ",Y2);
 	-+accionIlegal(Source);
-	?movs(M);
+	?movs(Source,M1);
 	.send(Source,tell,tryAgain).
 	
-+exchange(X1,Y1,X2,Y2)[source(Source)] : 
-	player(T,Source) & turn(T) &
-	steak(4,X1,Y1) | steak(4,X2,Y2)
-	<-
-	.abolish(exchange(X1,Y1,X2,Y2));
-	.print("Recibin de ", Source, " a solicitude de intercambiar un obstáculo: ",C1," en ", X1, ", ",Y1," o ", C2, " en ", X2, ", ",Y2);
-	-+accionIlegal(Source);
-	?movs(M);
-	.send(Source,tell,tryAgain).
-
 +exchange(X1,Y1,X2,Y2)[source(Source)]:
 	player(T,Source) & turn(T) &
 	not steak(_,X1,Y1) | not steak(_ ,X2,Y2)
@@ -338,7 +324,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.abolish(exchange(X1,Y1,X2,Y2));
 	.print("Recibin de ", Source, " a solicitude de intercambiar algun steak que non existe: ", X1, ", ",Y1," ou ", X2, ", ",Y2);
 	-+accionIlegal(Source);
-	?movs(M);
+	?movs(Source,M1);
 	.send(Source,tell,tryAgain).
 	
 +exchange(X1,Y1,X2,Y2)[source(Source)]:
@@ -381,12 +367,12 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.print("Detectada LineaV: ",X,",",Y,"(",S,",",L,")");
 	!destroyLineV(X,Y,S,L).	
 	
-+!checkForActions(C,X,Y).
++!checkForActions(C,X,Y)<- !addPuntos(0).
 
 /*****************************************************************/
 /********************   Executa as accions    *******************/
 /*****************************************************************/	
-//Liña Horizontal
+//Liï¿½a Horizontal
 +!destroyLineH(X,Y,S,L)[source(Source)] : steak(C,X,Y) <-
 	.print(L," en horizontal en (",S,",",Y,"):",C," [",X,":",Y,"]");
 
@@ -422,10 +408,9 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	-promotionTo(P);
 	+promotionTo(0);
 	!completarTablero.	
-	
 +!destroyLineH(X,Y,S,L).	
 
-//Liña Vertical
+//Liï¿½a Vertical
 +!destroyLineV(X,Y,S,L)[source(Source)] : steak(C,X,Y) <-
 	.print(L," en vertical en (",X,",",S,"):",C," [",X,":",Y,"]");
 
@@ -592,27 +577,58 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 +!completarTablero : sizeof(N) <-
 	for (.range(X,0,N)) {
 		!putNewSteakOnTop(X);
+	//	.print("Nueva pieza................................");
 	};
-	.print("Tablero Completado.");
 	+reChecking;
 	!reCheck.
 
 //Comproba todo o taboleiro para ver se se crearon agrupacios ao completar.	
 +!reCheck : sizeof(N) & reChecking <-
+/*Buscamos las piezas especiales*/
+	.findall(st(X,Y,C,3), figSquare(X,Y)&steak(C,X,Y),ListaGestores);
+	.findall(st(X,Y,C,1), (lineH(X,Y,C,X,L) & L > 3 & L < 5) | (lineV(X,Y,C,Y,L) & L > 3 & L < 5), ListaIps);
+	.findall(st(X,Y,C,2),  ( lineH(X,Y,C,X,L) & L > 4) | ( lineV(X,Y,C,Y,L) & L > 4), ListaCatedros);
+	.findall(st(X,Y,C,4), inT(X,Y,_,_,_)&steak(C,X,Y), ListaCompradores);
+	.concat(ListaGestores,ListaIps,ListaCatedros,ListaCompradores,ListaEspeciales);
+	.print("Esta es la lista de piezas especiales encontradas: ",ListaEspeciales);
+	.findall(todelete(Y,X), inSquare(X,Y,_,_) | ( lineH(X,Y,C,_,L) & L >2) | ( lineV(X,Y,C,_,L) & L >2) | inT(X,Y,_,_,_),List);
+	.print("Eliminables: ",List);
+	.print("Esperamos para comprobar");
+	.wait(40);
+
 	.print("Comprobamos posibles combinacions xeradas automaticamente");
 	.abolish(reChecking);
-	for (.range(Y,0,N)) {
+	/*for (.range(Y,0,N)) {
 		for (.range(X,0,N)) {
 			if(steak(C,X,Y)){
 				//.print("------------Check: ", X, ",", Y); //Debug
 				!checkForActions(C,X,Y);
 			}
 		}
+	}*/
+	for (.member(todelete(Y,X),List)) {
+			if(steak(C,X,Y)& not .member(st(X,Y,C,_),ListaEspeciales)){
+				//.print("------------Check: ", X, ",", Y); //Debug
+				//!checkForActions(C,X,Y);
+				!clearSteak(X,Y);
+				//Aplicando tÃ©cnicas de plegado y desplegado 
+				//optimizamos esta llamada y la dejamos como:
+				};
+			if (.member(st(X,Y,C,T),ListaEspeciales)) {
+				!promote(X,Y,T);
+			}
+	
 	};
-	.print("A reCheck finished...........").
+	//.print("Caen las piezas superiores#@#@##@##@###@###@#@#@#@#@#@");
+	!moveSteaks;
+	//.print("AÃ±adimos las piezas especiales de", ListaEspeciales);
+	if (not List ==[]) {
+		//.print("Pasamos a completar el Tablero========================>>>>>>>>>>>");
+		!completarTablero
+	}.
 
 /*****************************************************************/
-/********************   Poñer / Quitar ficha   *******************/
+/********************   Poï¿½er / Quitar ficha   *******************/
 /*****************************************************************/	
 +!putSteak(X,Y,C,L) : promotionTo(1) <-
 	.print("La celda pasa a ser del player1----------------------------------------------------------------------------------------------");
@@ -727,18 +743,12 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 //Elimina IP -> Elimina Fila / Columna
 +!clearSteak(X,Y) : steak(C,X,Y) & C > 4 & special(X,Y,C,1) <-
 	!addPuntosBySteak(X,Y);
+	!removeSteak(X,Y);
 	?promotionTo(P);
 	-promotionTo(P);
-	if (player(1,X,Y)){
-		+promotionTo(1);
-	} else {
-		if (player(2,X,Y)){
-			+promotionTo(2);
-		} else {
-			+promotionTo(0);
-		}
-	};
-	!removeSteak(X,Y);
+	if (player(1,X,Y)){+promotionTo(1);};
+	if (player(2,X,Y)){+promotionTo(2);};
+	if (not player(_,X,Y)) {+promotionTo(0);};
 	?dir(H);
 	if (H==1) {
 		.print("IP -> Rompemos fila ",Y);
@@ -746,45 +756,29 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	} else {
 		.print("IP -> Rompemos columna ",X);
 		!clearColumn(X);
-	};
-	?promotionTo(Pl);
-	-promotionTo(Pl);
-	+promotionTo(0).
+	}.
+	
 //Elimna CT -> Elimina todas as fichas da mesma cor
 +!clearSteak(X,Y) : steak(C,X,Y) & C > 4 & special(X,Y,C,2) <-
 	!addPuntosBySteak(X,Y);
 	!removeSteak(X,Y);
 	?promotionTo(P);
 	-promotionTo(P);
-	if (player(1,X,Y)){
-		+promotionTo(1);
-	} else {
-		if (player(2,X,Y)){
-			+promotionTo(2);
-		} else {
-			+promotionTo(0);
-		}
-	};
+	if (player(1,X,Y)){+promotionTo(1);};
+	if (player(2,X,Y)){+promotionTo(2);};
+	if (not player(_,X,Y)) {+promotionTo(0);};
 	.print("CT -> Eliminamos todos os membros de ",C);
-	!clearColor(C);
-	?promotionTo(Pl);
-	-promotionTo(Pl);
-	+promotionTo(0).	
+	!clearColor(C).	
+	
 //Elimina GS -> Elimina ficha aleatoria do grupo (cor)
 +!clearSteak(X,Y) : steak(C,X,Y) & C > 4 & special(X,Y,C,3) <-
 	!addPuntosBySteak(X,Y);
 	!removeSteak(X,Y);
 	?promotionTo(P);
 	-promotionTo(P);
-	if (player(1,X,Y)){
-		+promotionTo(1);
-	} else {
-		if (player(2,X,Y)){
-			+promotionTo(2);
-		} else {
-			+promotionTo(0);
-		}
-	};
+	if (player(1,X,Y)){+promotionTo(1);};
+	if (player(2,X,Y)){+promotionTo(2);};
+	if (not player(_,X,Y)) {+promotionTo(0);};
 	.print("GS -> Elimina membro aleatorio de ",C," en ",X,",",Y);
 	?steak(C,RandomX,RandomY) & not RandomX == X & not RandomY == Y;
 	!clearSteak(RandomX,RandomY);
@@ -798,22 +792,13 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	!removeSteak(X,Y);
 	?promotionTo(P);
 	-promotionTo(P);
-	if (player(1,X,Y)){
-		+promotionTo(1);
-	} else {
-		if (player(2,X,Y)){
-			+promotionTo(2);
-		} else {
-			+promotionTo(0);
-		}
-	};
+	if (player(1,X,Y)){+promotionTo(1);};
+	if (player(2,X,Y)){+promotionTo(2);};
+	if (not player(_,X,Y)) {+promotionTo(0);};
 	.print("CO -> Elimina fichas en area 5x5 alrededor");
 	for (.range(I,Y-2,Y+2)) {
 		!clearNRow(5,X-2,I);
-	};
-	?promotionTo(Pl);
-	-promotionTo(Pl);
-	+promotionTo(0).
+	}.
 //Elimina ficha normal
 +!clearSteak(X,Y) : steak(C,X,Y) & C > 4 <-
 	!addPuntosBySteak(X,Y);
@@ -824,6 +809,8 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	!removeSteak(X,Y).
 */
 +!clearSteak(X,Y).
+
++!clearSpecials <- .abolish(special(_,_,_,_)).
 
 /*****************************************************************/
 /********************     Caida de fichas      *******************/
@@ -876,7 +863,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 +!downSteak(X,Y).
 
 /*****************************************************************/
-/********************   Promoción de fichas    *******************/
+/********************   Promociï¿½n de fichas    *******************/
 /*****************************************************************/	
 +!promote2IP(X,Y) 	: 	steak(_,X,Y) 	<- !promote(X,Y,1); .concat("Promovido a IP en ",X,",",Y,S); 	!addPuntos(4).		//IP
 +!promote2CT(X,Y)	: 	steak(_,X,Y) 	<- !promote(X,Y,2); .concat("Promovido a CT en ",X,",",Y,S); 	!addPuntos(8).		//CT
@@ -901,7 +888,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 		.print("La celda sigue siendo del player2++++++++++++++++++++++++++++++++++++++++");
 		put(X,Y,-C,L);
 	} else {
-		.print("La celda no tiene dueño     +++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		.print("La celda no tiene dueï¿½o     +++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 		put(X,Y,C,L);
 		}
 	}}};
@@ -925,39 +912,45 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	?pointsMov(Player2,Pt2);
 	.print("Puntos del Player:", Player2,": ",Pt2).
 	
-+!addPuntos(Pt) : turn(T) & player(T,Player) <-//& movs(player1,Mov) & points(player1,Mov,Points) & Points > -1 <-
++!addPuntos(Pt) : turn(0) & player(0,player1) <-//& movs(player1,Mov) & points(player1,Mov,Points) & Points > -1 <-
 	//getPuntos(Puntos);
-	.print("Estamos en el turno: ",T," y juega el Player: ",Player);
-	?pointsMov(Player,Points);
+	.print("Estamos en el turno 0 y juega el Player 1.");
+	?pointsMov(player1,Points);
 	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
-	-pointsMov(Player,Points);
-	+pointsMov(Player,Points+ Pt);
-	?pointsMov(Player,P);
-	.print("O xogador: ",Player," leva acumulados no movimiento actual un Total de: ",P," puntos] ").
+	-pointsMov(player1,Points);
+	+pointsMov(player1,Points+Pt);
+	?pointsMov(player1,P);
+	.print("O xogador player1 leva acumulados despois do movemento un Total de: ",P," puntos] ").
+
++!addPuntos(Pt) : turn(1) & player(1,player2) <-//& movs(player1,Mov) & points(player1,Mov,Points) & Points > -1 <-
+	//getPuntos(Puntos);
+	.print("Estamos en el turno 1 y juega el Player 2.");
+	?pointsMov(player2,Points);
+	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+	-pointsMov(player2,Points);
+	+pointsMov(player2,Points+ Pt);
+	?pointsMov(player2,P);
+	.print("O xogador player2 leva acumulados despois do movemento un Total de: ",P," puntos] ").
 
 
 +!addPuntos(_) <- .print("Algo va mal con la puntuacion............................................").
 
 //Determina os puntos que vale cada tipo de ficha
-+!addPuntosBySteak(X,Y) : special(X,Y,_,1) 	<- .print("Eliminado IP en ",X,",",Y); 			!addPuntos(2). 	//IP
-+!addPuntosBySteak(X,Y) : special(X,Y,_,2) 	<- .print("Eliminado CT en ",X,",",Y);			!addPuntos(10). 	//CT
++!addPuntosBySteak(X,Y) : special(X,Y,_,1) 	<- .print("Eliminado IP en ",X,",",Y); 		!addPuntos(2). 	//IP
++!addPuntosBySteak(X,Y) : special(X,Y,_,2) 	<- .print("Eliminado CT en ",X,",",Y);		!addPuntos(10). 	//CT
 +!addPuntosBySteak(X,Y) : special(X,Y,_,3) 	<- .print("Eliminado GS en ",X,",",Y);		!addPuntos(5). 	//GS
 +!addPuntosBySteak(X,Y) : special(X,Y,_,4) 	<- .print("Eliminado CO en ",X,",",Y);		!addPuntos(8). 	//CO
-+!addPuntosBySteak(X,Y) 					<- .print("Eliminada ficha en ",X,",",Y); 		!addPuntos(1). 	//Normal
++!addPuntosBySteak(X,Y) 					<- .print("Eliminada ficha en ",X,",",Y); 	!addPuntos(1). 	//Normal
 
-+!updatePoints<-
-	?turn(T);
-	?player(T,Player);
-	?points(Player,Pt);
-	-points(Player,Pt);
-	?pointsMov(Player,PtMov);
-	+points(Player,Pt+PtMov).
++!updatePoints : 	turn(0) & player(0,player1) & points(player1,Pt) & pointsMov(player1, PtMov) <-
+	-points(player1,Pt);
+	-+pointsMov(player1,0);
+	+points(player1,Pt+PtMov).
 
-/*
-+!updatePoints : turn(0) & player(0,player1) & points(player1,Pt) <-
-	?pointsMov(player1,PtMov);
-	-+points(player1,Pt+PtMov).
-*/
++!updatePoints : turn(1) & player(1,player2) & points(player2,Pt)  & pointsMov(player2, PtMov) <-
+	-points(player2,Pt);
+	-+pointsMov(player2,0);
+	+points(player2,Pt+PtMov).
 
 +!getPuntos(P1,P2) <-
 	?player(0,Player1);
@@ -968,18 +961,23 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 /***********************************************************************/
 /********************  Contador de Movementos  *******************/
 /***********************************************************************/	
-+!startMovs <-
-	-movs(player1,_);
-	+movs(player1,0);
-	-movs(player2,_);
-	+movs(player2,0).
-	
-+!addMov :  turn(T) & player(T,Player) & movs(Player,Movs) <-
-	-movs(Player,Movs);
-	+movs(Player,Movs + 1);
-	.print("O xogador: ", Player," leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))").
++!addMov :  turn(0) & player(0,player1) & movs(player1,Movs) <-
+	-movs(player1,Movs);
+	+movs(player1,Movs + 1);
+	.print("O xogador player1 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))").
 		
++!addMov :  turn(1) & player(1,player2) & movs(player1,Movs) <-
+	-movs(player2,Movs);
+	+movs(player2,Movs + 1);
+	.print("O xogador player2 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))").
+		
+	
 +!addMov <- .print("ESTAMOS EN PROBLEMASSSSSSSSSSSSSSSSSSS").
+
++!clearMovs <-
+	.abolish(movs(_,_));
+	+movs(player1,0);
+	+movs(player2,0).
 
 +!getMovs(Movs1,Movs2)  <-
 	?player(0,Player1);
@@ -996,7 +994,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.findall(c2,player(2,_,_),LC2);
 	.length(LC1,N1);
 	.length(LC2,N2);
-	.print("Actualizamos dominación del tablero a:",N1,", ",N2);
+	.print("Actualizamos dominaciï¿½n del tablero a:",N1,", ",N2);
 	-+celdas1(N1);
 	-+celdas2(N2).
 	

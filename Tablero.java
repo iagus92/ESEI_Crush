@@ -127,7 +127,11 @@ public class Tablero extends Environment {
 				play = player;
 				set(c,x,y);
 				addPercept( Literal.parseLiteral("steak(" + c + "," + x + "," + y + ")"));
-				if (player ==1 | player==2) {addPercept( Literal.parseLiteral("player(" + player + "," + x + "," + y + ")"));};
+				if (player ==1 | player==2) {
+					removePercept(Literal.parseLiteral("player(1," + x + "," + y + ")"));
+					removePercept(Literal.parseLiteral("player(2," + x + "," + y + ")"));
+					addPercept( Literal.parseLiteral("player(" + player + "," + x + "," + y + ")"));
+				};
 			} 
         }
 		
