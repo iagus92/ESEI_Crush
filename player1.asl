@@ -50,7 +50,6 @@ cuadradoEsp2(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X,Y+1,C
 cuadradoEsp3(C,T,X,Y) :- special(X,Y,C,T) | special(X,Y-1,C,T) | special(X+1,Y,C,T) | special(X+1,Y-2,C,T) | special(X+2,Y-1,C,T).
 cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1,C,T) | special(X-1,Y-1,C,T) | special(X,Y-2,C,T).
 
-
 /* Initial goals */
 
 /* Plans */
@@ -268,12 +267,6 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 // Percepción obstáculos.	
 +steak(4,X,Y)[source(S)] <- -steak(4,X,Y)[source(S)];
 	+obstacle(X,Y).
-	
-/*
-// Borra percepción de especial si se añade steak en esa casilla.
-+steak(C,X,Y)[source(S)]: special(X,Y,C,T)[source(judge)] 
-	<- -special(X,Y,C,T)[source(judge)].
-*/
 
 // Llama al plan intercambiar.
 +canExchange(N) : player(N) <- 
