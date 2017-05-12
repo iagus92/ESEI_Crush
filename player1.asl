@@ -269,9 +269,10 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 	+obstacle(X,Y).
 
 // Llama al plan intercambiar.
-+canExchange(N) : player(N) <- 
-	-canExchange[source(S)]; !buscarCombinacion.	
++canExchange(N) : player(N) <-
+	-canExchange(N)[source(S)]; !buscarCombinacion.
+	
 +tryAgain <- 
-	-tryAgain[source(S)]; !buscarCombinacion.
+	!buscarCombinacion.
 			
 +pos(Ag,X,Y)[source(S)] <- -pos(Ag,X,Y)[source(S)].

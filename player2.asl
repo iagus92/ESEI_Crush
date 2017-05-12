@@ -1,7 +1,7 @@
 // Agent player in project conecta4.mas2j
 
 /* Initial beliefs and rules */
-player(0).
+player(1).
 flag(0).
 
 contiguas(C,X,Y,X1,Y1) :- steak(C,X,Y) & steak(C1,X+1,Y) & not(C==C1) & X1=X+1 & Y1=Y.
@@ -283,17 +283,12 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 // Percepción obstáculos.	
 +steak(4,X,Y)[source(S)] <- -steak(4,X,Y)[source(S)];
 	+obstacle(X,Y).
-	
-/*
-// Borra percepción de especial si se añade steak en esa casilla.
-+steak(C,X,Y)[source(S)]: special(X,Y,C,T)[source(judge)] 
-	<- -special(X,Y,C,T)[source(judge)].
-*/
 
 // Llama al plan intercambiar.
 +canExchange(N) : player(N) <- 
-	-canExchange[source(S)]; !buscarCombinacion.	
+	-canExchange(N)[source(S)]; !buscarCombinacion.	
+	
 +tryAgain <- 
-	-tryAgain[source(S)]; !buscarCombinacion.
+	!buscarCombinacion.
 			
 +pos(Ag,X,Y)[source(S)] <- -pos(Ag,X,Y)[source(S)].
