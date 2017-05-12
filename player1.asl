@@ -273,6 +273,6 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 	-canExchange(N)[source(S)]; !buscarCombinacion.
 	
 +tryAgain <- 
-	!buscarCombinacion.
+	-tryAgain[source(S)]; !buscarCombinacion.
 			
 +pos(Ag,X,Y)[source(S)] <- -pos(Ag,X,Y)[source(S)].
