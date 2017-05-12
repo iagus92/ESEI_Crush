@@ -51,41 +51,31 @@ cuadradoEsp2(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X,Y+1,C
 cuadradoEsp3(C,T,X,Y) :- special(X,Y,C,T) | special(X,Y-1,C,T) | special(X+1,Y,C,T) | special(X+1,Y-2,C,T) | special(X+2,Y-1,C,T).
 cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1,C,T) | special(X-1,Y-1,C,T) | special(X,Y-2,C,T).
 
-
 /* Initial goals */
 
 /* Plans */
 
 // Selecciona la mejor combinación.
-+!buscarCombinacion:  sizeof(N) <-
-	for (.range(Y,N,0,-1) & flag(0)) {
-		for (.range(X,0,N)& flag(0)) {
-			!intercambiarEsp(X,Y,4);
-			!intercambiarEsp(X,Y,2);
-			!intercambiarEsp(X,Y,1);
-			!intercambiarEsp(X,Y,3);
-		}
-	}
-	for (.range(Y,N,0,-1)& flag(0)) {
-		for (.range(X,0,N)& flag(0)) {
-			!intercambiar(X,Y);	
-		}
-	}
-	!intercambiarAleatorio;
-	-+flag(0).
++!buscarCombinacion
+	<-  -+flag(0);
+	!intercambiarEsp(4);
+	!intercambiarEsp(2);
+	!intercambiarEsp(1);
+	!intercambiarEsp(3);
+	!intercambiar.
 
 // Intercambio con especial para T horizontal.
-+!intercambiarEsp(X,Y,T) : teH(C,X,Y,X1,X2) & steak(_,X2,Y) & especialTeH(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & teH(C,X,Y,X1,X2) & steak(_,X2,Y) & especialTeH(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP T horizontal------",C,", ",X2,", ",Y);
 	   .send(judge,tell,exchange(X1,Y,X2,Y)); -+flag(1).
 
 // Intercambio con especial para T vertical.
-+!intercambiarEsp(X,Y,T) : teV(C,X,Y,Y1,Y2) & steak(_,X,Y2) & especialTeV(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & teV(C,X,Y,Y1,Y2) & steak(_,X,Y2) & especialTeV(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP T vertical------",C,", ",X,", ",Y2);
 	   .send(judge,tell,exchange(X,Y1,X,Y2)); -+flag(1).	
 
 // Intercambio con especial para fila de 5.
-+!intercambiarEsp(X,Y,T) : contiguas5H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial5H(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas5H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial5H(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP 5 vertical------",C,", ",NewX,", ",NewY);
 		if((special(X1-1,Y1,C,T) & NewX=X1-1)|(special(X1+1,Y1,C,T)) & NewX=X1+1){
 			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1);	
@@ -94,201 +84,199 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 		}.	
 
 // Intercambio con especial para columna de 5.
-+!intercambiarEsp(X,Y,T) : contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial5V(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial5V(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP 5 vertical------",C,", ",NewX,", ",NewY);
 	   if((special(X1,Y1-1,C,T) & NX=X1 & NY=Y1-1)|(special(X1,Y1+1,C,T)) & NX=X1 & NY=Y1+1){
 			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);	
 		}else{
-			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1)
 		}.	 
 
 // Intercambio con especial para columna de 4.
-+!intercambiarEsp(X,Y,T) : contiguas4V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial4V(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas4V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & especial4V(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP 4 vertical------",C,", ",NewX,", ",NewY);
 	   if((special(X1,Y1-1,C,T) & NX=X1 & NY=Y1-1)|(special(X1,Y1+1,C,T)) & NX=X1 & NY=Y1+1){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);	
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)	
 		}else{
-			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1)
 		}.
 
 // Intercambio con especial para fila de 4.
-+!intercambiarEsp(X,Y,T) : contiguas4H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial4H(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas4H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & especial4H(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio ESP 4 horizontal------",C,", ",NewX,", ",NewY);
 	   if((special(X1-1,Y1,C,T) & NX=X1-1 & NY=Y1)|(special(X1+1,Y1,C,T)) & NX=X1+1 & NY=Y1){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);	
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)	
 		}else{
-			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1)
 		}.
 
 // Intercambio cuadrado especial.
-+!intercambiarEsp(X,Y,T) : cuadradoAbajo1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp1(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & cuadradoAbajo1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp1(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio cuadrado abajo izq------",C,", ",X2,", ",Y2);
 		if((special(X-1,Y+1,C,T) & NX=X-1 & NY=Y+1)|(special(X,Y+2,C,T) & NX=X & NY=Y+2)){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)
 		}else{
-			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1)
 		}.	   
 
 // Intercambio cuadrado especial.
-+!intercambiarEsp(X,Y,T) : cuadradoAbajo2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp2(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & cuadradoAbajo2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp2(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio cuadrado abajo der------",C,", ",X2,", ",Y2);
 	   if((special(X+2,Y+1,C,T) & NX=X+2 & NY=Y+1)|(special(X+1,Y+2,C,T) & NX=X+1 & NY=Y+2)){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)
 		}else{
-			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1)
 		}.
 	   
 // Intercambio cuadrado especial.
-+!intercambiarEsp(X,Y,T) : cuadradoArriba1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp3(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & cuadradoArriba1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp3(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio cuadrado arriba der------",C,", ",X2,", ",Y2);
 	   if((special(X+2,Y-1,C,T) & NX=X+2 & NY=Y-1)|(special(X+1,Y-2,C,T) & NX=X+1 & NY=Y-2)){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)
 		}else{
-			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1)
 		}.	
 	 
 // Intercambio cuadrado especial.
-+!intercambiarEsp(X,Y,T) : cuadradoArriba2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp4(C,T,X,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & cuadradoArriba2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & cuadradoEsp4(C,T,X,Y)
 	<- .print("-----SOLICITA intercambio cuadrado arriba izq------",C,", ",X2,", ",Y2);
 	   if((special(X-1,Y-1,C,T) & NX=X-1 & NY=Y-1)|(special(X,Y-2,C,T) & NX=X & NY=Y-2)){
-			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,NX,NY)); -+flag(1)
 		}else{
-			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1);
+			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1)
 		}.			
 		
 // Intercambio con especial para fila de 3 por la izquierda.
-+!intercambiarEsp(X,Y,T) : contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY) & especial3HI(C,T,X1,Y) & flag(0) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY) & especial3HI(C,T,X1,Y)
 	<- .print("-----SOLICITA intercambio ESP 3 izquierda------",C,", ",NewX,", ",NewY);
 	   if((special(X1-1,Y-1,C,T) & NX=X1-1 & NY=Y-1)|(special(X1-1,Y+1,C,T) & NX=X1-1 & NY=Y+1)|(special(X1-2,Y,C,T) & NX=X1-2 & NY=Y)){
-	   		.send(judge,tell,exchange(X1-1,Y,NX,NY)); -+flag(1);
+	   		.send(judge,tell,exchange(X1-1,Y,NX,NY)); -+flag(1)
 	   }else{
-			.send(judge,tell,exchange(X1-1,Y,NewX,NewY)); -+flag(1);
-	   }.                                                                                                                 
+			.send(judge,tell,exchange(X1-1,Y,NewX,NewY)); -+flag(1)
+	   }.
 
 // Intercambio con especial para fila de 3 por la derecha.
-+!intercambiarEsp(X,Y,T) : contiguas3H(C,X1,X2,Y,Y) & steak(_,X2+1,Y) & tresDcha(C,X2,Y,NewX,NewY) & especial3HD(C,T,X1,Y) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas3H(C,X1,X2,Y,Y) & steak(_,X2+1,Y) & tresDcha(C,X2,Y,NewX,NewY) & especial3HD(C,T,X1,Y)
 	<- .print("-----SOLICITA intercambio ESP 3 derecha------",C,", ",NewX,", ",NewY);
 	   if((special(X2+1,Y-1,C,T) & NX=X2+1 & NY=Y-1)|(special(X2+1,Y+1,C,T) & NX=X2+1 & NY=Y+1)|(special(X2+2,Y,C,T) & NX=X2+2 & NY=Y)){
-	   		.send(judge,tell,exchange(X2+1,Y,NX,NY)); -+flag(1);
+	   		.send(judge,tell,exchange(X2+1,Y,NX,NY)); -+flag(1)
 	   }else{
-			.send(judge,tell,exchange(X2+1,Y,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X2+1,Y,NewX,NewY)); -+flag(1)
 	   }.
 
 // Intercambio con especial para columna de 3 por abajo.
-+!intercambiarEsp(X,Y,T) : contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y2+1) & tresAbajo(C,X,Y2,NewX,NewY) & especial3VAb(C,T,X,Y1) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y2+1) & tresAbajo(C,X,Y2,NewX,NewY) & especial3VAb(C,T,X,Y1)
 	<-	.print("-----SOLICITA intercambio ESP 3 abajo------",C,", ",NewX,", ",NewY);
 		if((special(X-1,Y2+1,C,T) & NX = X-1 & NY = Y2+1) | (special(X,Y2+2,C,T) & NX = X & NY = Y2+2) | (special(X+1,Y2+1,C,T) & NX = X+1 & NY = Y2+1)){
-			.send(judge,tell,exchange(X,Y2+1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X,Y2+1,NX,NY)); -+flag(1)
 		}else{		
-			.send(judge,tell,exchange(X,Y2+1,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X,Y2+1,NewX,NewY)); -+flag(1)
 		}.
 		
 // Intercambio con especial para columna de 3 por arriba.
-+!intercambiarEsp(X,Y,T) : contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & especial3VAr(C,T,X,Y1) & flag(0)
++!intercambiarEsp(T) : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & especial3VAr(C,T,X,Y1)
 	<-	.print("-----SOLICITA intercambio ESP 3 arriba------",C,", ",NewX,", ",NewY);
 		if((special(X2-1,Y1-1,C,T) & NX = X2-1 & NY = Y1-1) | (special(X2,Y1-2,C,T) & NX = X2 & NY = Y1-2) | (special(X1+1,Y1-1,C,T) & NX = X2+1 & NY = Y1-1)){
-			.send(judge,tell,exchange(X,Y1-1,NX,NY)); -+flag(1);
+			.send(judge,tell,exchange(X,Y1-1,NX,NY)); -+flag(1)
 		}else{
-			.send(judge,tell,exchange(X,Y1-1,NewX,NewY)); -+flag(1);
+			.send(judge,tell,exchange(X,Y1-1,NewX,NewY)); -+flag(1)
 		}.
 
-+!intercambiarEsp(X,Y,T).
++!intercambiarEsp(T).
 		
 // Intercambio para columna de 5.
-+!intercambiar(X,Y) : contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas5V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 5 vertical------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1).
 
 // Intercambio para fila de 5.
-+!intercambiar(X,Y) : contiguas5H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas5H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 5 horizontal------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1).
 
 // Intercambio para T horizontal.
-+!intercambiar(X,Y) : teH(C,X,Y,X1,X2) & steak(_,X2,Y) & flag(0)
++!intercambiar : flag(0) & teH(C,X,Y,X1,X2) & steak(_,X2,Y)
 	<- .print("-----SOLICITA intercambio T horizontal------",C,", ",X2,", ",Y);
 	   .send(judge,tell,exchange(X1,Y,X2,Y)); -+flag(1).
 
 // Intercambio para T vertical.
-+!intercambiar(X,Y) : teV(C,X,Y,Y1,Y2) & steak(_,X,Y2) & flag(0)
++!intercambiar : flag(0) & teV(C,X,Y,Y1,Y2) & steak(_,X,Y2)
 	<- .print("-----SOLICITA intercambio T vertical------",C,", ",X,", ",Y2);
 	   .send(judge,tell,exchange(X,Y1,X,Y2)); -+flag(1).	   
 	   
 // Intercambio para columna de 4.
-+!intercambiar(X,Y) : contiguas4V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas4V(C,X,Y,X1,Y1) & steak(_,X1,Y1) & colMasTres(C,X1,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 4 vertical------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1).
 
 // Intercambio para fila de 4.
-+!intercambiar(X,Y) : contiguas4H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas4H(C,X,Y,X1,Y1) & steak(_,X1,Y1) & filMasTres(C,X1,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 4 horizontal------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X1,Y1,NewX,NewY)); -+flag(1).
 
 // Intercambio cuadrado.
-+!intercambiar(X,Y) : cuadradoAbajo1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & flag(0)
++!intercambiar : flag(0) & cuadradoAbajo1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1)
 	<- .print("-----SOLICITA intercambio cuadrado abajo izq------",C,", ",X2,", ",Y2);
 	   .send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1).	   
 
 // Intercambio cuadrado.
-+!intercambiar(X,Y) : cuadradoAbajo2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & flag(0)
++!intercambiar : flag(0) & cuadradoAbajo2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1)
 	<- .print("-----SOLICITA intercambio cuadrado abajo der------",C,", ",X2,", ",Y2);
 	   .send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1).	
 	   
 // Intercambio cuadrado.
-+!intercambiar(X,Y) : cuadradoArriba1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & flag(0)
++!intercambiar : flag(0) & cuadradoArriba1(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1)
 	<- .print("-----SOLICITA intercambio cuadrado arriba der------",C,", ",X2,", ",Y2);
 	   .send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1).	
 	 
 // Intercambio cuadrado.
-+!intercambiar(X,Y) : cuadradoArriba2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1) & flag(0)
++!intercambiar : flag(0) & cuadradoArriba2(C,X,Y,X1,Y1,X2,Y2) & steak(_,X1,Y1)
 	<- .print("-----SOLICITA intercambio cuadrado arriba izq------",C,", ",X2,", ",Y2);
 	   .send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1).		   
 	   
 // Intercambio para fila de 3 por la izquierda.
-+!intercambiar(X,Y) : contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 3 izquierda------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X1-1,Y,NewX,NewY)); -+flag(1).
 	
 // Intercambio para fila de 3 por la derecha.
-+!intercambiar(X,Y) : contiguas3H(C,X1,X2,Y,Y) & steak(_,X2+1,Y) & tresDcha(C,X2,Y,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas3H(C,X1,X2,Y,Y) & steak(_,X2+1,Y) & tresDcha(C,X2,Y,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 3 derecha------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X2+1,Y,NewX,NewY)); -+flag(1).
 	   
 // Intercambio para columna de 3 por abajo.
-+!intercambiar(X,Y) : contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y2+1) & tresAbajo(C,X,Y2,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y2+1) & tresAbajo(C,X,Y2,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 3 abajo------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X,Y2+1,NewX,NewY)); -+flag(1).
 	
 // Intercambio para columna de 3 por arriba.
-+!intercambiar(X,Y) : contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & flag(0)
++!intercambiar : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 3 arriba------",C,", ",NewX,", ",NewY);
 	   .send(judge,tell,exchange(X,Y1-1,NewX,NewY)); -+flag(1).	   
 
-+!intercambiar(X,Y).	   
-	   
 // En último caso intercambio aleatorio.
-+!intercambiarAleatorio: flag(0) 
++!intercambiar : flag(0)
 	<- .findall(steak(Color,X,Y),steak(Color,X,Y),SteaksList);
 	.length(SteaksList,SteaksLen);
 	.nth(math.floor(math.random(SteaksLen)),SteaksList,steak(C,Cx,Cy));		
 	if(contiguas(C,Cx,Cy,NewX,NewY)){
 		.print("-----SOLICITA intercambio de (",Cx,",",Cy,")");
-		.send(judge,tell,exchange(Cx,Cy,NewX,NewY)); -+flag(1);
+		.send(judge,tell,exchange(Cx,Cy,NewX,NewY)); -+flag(1)
 	}else{
-		!intercambiarAleatorio;
+		!intercambiar;
 	}.
-	
-+!intercambiarAleatorio.
+
++!intercambiar.	
 	
 // Percepción obstáculos.	
 +steak(4,X,Y)[source(S)] <- -steak(4,X,Y)[source(S)];
 	+obstacle(X,Y).
 
 // Llama al plan intercambiar.
-+canExchange(N) : player(N) <- 
-	-canExchange(N)[source(S)]; !buscarCombinacion.	
++canExchange(N) : player(N) <- .wait(100); 
+	-canExchange(N)[source(S)]; !buscarCombinacion.
 	
-+tryAgain <- 
-	-tryAgain[source(S)]; !buscarCombinacion.
++tryAgain <- .wait(100);
+	 -tryAgain[source(S)]; !buscarCombinacion.
 			
 +pos(Ag,X,Y)[source(S)] <- -pos(Ag,X,Y)[source(S)].

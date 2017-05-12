@@ -4,27 +4,21 @@
 
 endOfGame :- 
 	//.print("VERIFICANDO END OF GAME ========================================================>") &
-	movs(player1,M1)  & 
-	movs(player2,M2) &
-	points(player1,P1) & 
-	points(player2,P2) &
+	movs(player1,M1) & movs(player2,M2) &
+	points(player1,P1) & points(player2,P2) &
 	sizeof(N) & 
-	celdas1(C1) & 
-	celdas2(C2) &
+	celdas1(C1) & celdas2(C2) &
 	movs(Movs) &
-	((M1 > Movs & M2> Movs) | ((C1 > N*N*3/4)& P1 > 99) | ((C2 > N*N*3/4)& P2 > 99) ) &
-	.print("Porque entre aqui?????",M1," , ",P1," , ",C1) &
-	.print("Porque entre aqui?????",M2," , ",P2," , ",C2).
-//endOfGame :- movs(M) & points(P) & P > 99.
+	level(L)&
+	((M1 > Movs & M2= Movs) | 													// CONDICION DE MOVIMIENTOS
+	((C1 > N*N*3/4)& P1 > 99&L==1) | ((C2 > N*N*3/4)& P2 > 99&L==1) | 			// GANADOR NIVEL 1
+	((C1 > N*N*3/4)& P1 > 199&L==2) | ((C2 > N*N*3/4)& P2 > 199&L==2)) &		// GANADOR NIVEL 2
+	.print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$") &
+	.print("ENTRE AQUI CON: M1= ",M1," , P1= ",P1," , C1= ",C1) &
+	.print("--------------------------------------------------------------------------------") &
+	.print("ENTRE AQUI CON: M2= ",M2," , P2= ",P2," , C2= ",C2) &
+	.print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$").
 
-/*
-endOfGame :- 
-//	.print("END OF GAME.") &
-	movs(player2,M2) & 
-	points(player2,P2) & 
-	(M2 > 19 | P2 > 99) &
-	.print("Porque entre aqui?????",M2," , ",P2).
-*/
 
 x(0).
 y(9).
@@ -71,9 +65,9 @@ inT(X,Y,X1,Y1,D) :- lineH(X,Y,C,S,3) & X1 = S & Y1 = Y   & lineV(X1,Y1,C,Y1-1,3)
 
 mapa(L) :- mapa1(L) | mapa2(L).
 
-mapa2([[       16, 32,   16,   32,   64,   65,   16,   32, 512, 256],
-             [128,   4, 32, 512,   32, 32, 512,     4,   32,   64],
-	         [128, 16,   32, 16, 512, 512, 256, 128,   64,   64],
+mapa2([[  16, 32,   16,   32,   64,   65,   16,   32, 512, 256],
+             [128,   4, 256, 512,   16, 256, 512,     4,   32,   64],
+	         [128, 16,   32, 256, 512, 512, 256, 128,   64,   64],
 	         [ 32, -32,   17, 128,   33, 512, 256, 128, 128,   17],
 	         [ 64,  64,   32, 128,   32,   16, 512, 256, 128,   65],
              [128,   4, 256, 512,  -64, 256,-512,     4,   32,   32],
@@ -101,9 +95,21 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 /* Plans */
 
 +!start : true <- 
-	.all_names(L);
-	.wait(100);
 	+turn(0);
+	+winner1(0);
+	+winner2(0);	
+	!asignoTurno;
+	+level(1);
+	!level1;
+	!winner;
+	!clearMovs;
+	!clearSpecials;
+	-+level(2);
+	!level2;
+	!winner.
+	
++!asignoTurno <-
+	.all_names(L);
 	for (.member(Player,L)){
 		if (not Player ==judge) {
 			.print("En esta partida juega el agente: ",Player);
@@ -111,7 +117,6 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 			+player(T,Player);
 			+movs(Player,0);
 			+points(Player,0);
-			//+pointsMov(Player,0);
 			.send(Player,tell,turn(T));
 			-+turn((T+1) mod 2);
 			.print("El agente: ", Player," juega con turno: ", T);
@@ -119,18 +124,8 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 			.print("Arbitra el agente: ", Player);
 		};
 	};
-	+winner1(0);
-	+winner2(0);	
-	-+turn(0);
-	+level(1);
-	.wait(5000);
-	/*!level1;
-	!winner;*/
-	!clearMovs;
-	!clearSpecials;
-	-+level(2);
-	!level2;
-	!winner.
+	-+turn(0).
+
 	
 +!winner : 	points(player1,Pt1) & points(player2,Pt2) & winner1(W1) & winner2(W2) &
 			celdas1(Cel1) & celdas2(Cel2) & sizeof(N) & level(L) <-
@@ -163,27 +158,24 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 
 +!level1 : mapa1(Mapa) <-
 	!iniciarTablero (Mapa) ;
-	-+movs(15);
-	 //-+turn(0);
-	.broadcast(tell,canExchange(0));
-	.wait(endOfGame);
-	.broadcast(tell,stop);
-	.wait(500);
-	!getPuntos(Player1,Player2);
+	-+movs(4);
+	.broadcast(tell,canExchange(0)); 	// SE AVISA A TODOS LOS JUGADORES QUE EL JUGADOR CON TURNO 0 PUEDE COMENZAR
+	.wait(endOfGame); 					// SE JUEGA HASTA QUE SE CUMPLEN LAS CONDICIONES
+	.broadcast(tell,stop);				// SE AVISA DEL FIN DE JUEGO A TODOS LOS JUGADORES
+	!getPuntos(Player1,Player2);		// SE VISUALIZAN LOS RESULTADOS
 	!getMovs(Mov1,Mov2);
-	.print("Fin do xogo. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
-	.print("Fin do xogo. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.").
+	.print("Fin do Level 1. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
+	.print("Fin do Level 1. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.").
 
 +!level2 : mapa2(Mapa) <-
-	.wait(5000);
 	!iniciarTablero (Mapa) ;
-	-+movs(20);
+	-+movs(9);
 	-+turn(0);
-	.broadcast(tell,canExchange(0));
-	.wait(endOfGame);
-	.broadcast(tell,stop);
-	.wait(500);
-	!getPuntos(Player1,Player2);
+	.broadcast(tell,canExchange(0)); 	// SE AVISA A TODOS LOS JUGADORES QUE EL JUGADOR CON TURNO 0 PUEDE COMENZAR
+	.wait(endOfGame); 				// SE JUEGA HASTA QUE SE CUMPLEN LAS CONDICIONES
+	.broadcast(tell,stop);				// SE AVISA DEL FIN DE JUEGO A TODOS LOS JUGADORES
+	!getPuntos(Player1,Player2);		// SE VISUALIZAN LOS RESULTADOS
+	!getMovs(Mov1,Mov2);
 	!getMovs(Mov1,Mov2);
 	.print("Fin do xogo. O resultado foi: Player1=",Player1," puntos  en ",Mov1," movementos.");
 	.print("Fin do xogo. O resultado foi: Player2=",Player2," puntos  en ",Mov2," movementos.").
@@ -191,15 +183,29 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 /*****************************************************************/
 /********************     Iniciar Taboleiro    *******************/
 /*****************************************************************/	
-+!iniciarTablero(Mapa) 
-	<-
++!iniciarCeldas <-
+	.abolish(celdas1(_));
+	.abolish(celdas2(_));
 	+celdas1(0);
 	+celdas2(0);	
-	.wait(200);
+	.wait(200).
+	
++!limpiarTablero: sizeof(N) <-
+	for (.range(I,0,N)) {
+		for (.range(J,0,N)) {
+			!removeSteak(I,J);
+		}
+	}.
+	
++!iniciarTablero(Mapa) 
+	<-
+	!iniciarCeldas;
+	!limpiarTablero;
 	?celdas1(C1);
 	?celdas2(C2);
 	!recorreMapa(Mapa);
 	-+promotionTo(0);
+	.print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 	!startPuntos.
 
 //Rutina para xerar o taboleiro automaticamente	(comentar a de arriba)
@@ -212,9 +218,14 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 /********************    Peticions Xogador     *******************/
 /*****************************************************************/	
 +accionIlegal(Ag) : amarilla(N) <- 
-	if (N<3) {-+amarilla(N+1)}
-	else {+trampa(Ag)}.
-+accionIlegal(Ag) : not amarilla(N) <- +amarilla(1). // Controla si algun player intenta realizar un movimiento ilegal
+	if (N<3) {
+		-+amarilla(N+1)
+	} else {
+		+trampa(Ag)
+	}.
+	
++accionIlegal(Ag) : not amarilla(N) <- 
+	+amarilla(1). // Controla si algun player intenta realizar un movimiento ilegal
 
 +trampa(Ag) <- 
 	.kill_agent(Ag);
@@ -222,7 +233,8 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 
 /*****************************************************************/
 /********************      Colocar Ficha       *******************/
-/*****************************************************************/	
+/*****************************************************************/
+
 +putSteak(X)[source(Source)] : not steak(_,X,0) <-
 	?chooseC(C);
 	.print("Recibin de ", Source, " a solicitude de colocar un steak ",C," en: ", X,",",0);
@@ -263,10 +275,11 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	steak(C1,X1,Y1) & steak(C2,X2,Y2) & not C1 == C2 & contiguas(X1,X2,Y1,Y2) 
 	<-
 	.abolish(exchange(X1,Y1,X2,Y2));
+	-+promotionTo(0);
 	.print("Recibin de ", Source, " a solicitude de intercambiar o steak ", C1, " en: ", X1, ", ",Y1," por o steak ", C2, " en: ", X2, ", ",Y2, " que vou atender inmediatamente.");
+	.wait(1000);
 	if (X1==X2) {-+dir(0);};
 	if (Y1==Y2) {-+dir(1);};
-	.wait(1000);
 	!exchangeSteak(X1,Y1,X2,Y2);
 	.print("Feito o intercambio.");
 	!addMov;
@@ -282,19 +295,18 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 			-+promotionTo(0);		
 		}
 	};
-	!checkForActions(C2,X1,Y1);
-	.wait(50);
+	
+	!checkForActions(C2,X1,Y1); 
 	!checkForActions(C1,X2,Y2);	
-	//.wait(2000);
-	?movs(Source,M1);
+
+	?movs(Source,Mov);
 	!updatePoints;
 	!updateCells;
-	.print(Source," realizou ata agora ",M1," movimentos.");
-	.send(Source,untell,tryAgain);
-	//.wait(4000);
+	.print(Source," realizou ata agora ",Mov," movimentos.");
+	.send(Source,untell,tryAgain);		//reiniciamos su percepcion de volver a jugar
 	-+turn((T+1) mod 2);
-	.print("Es el turno del Player: ",T+1,"............|||||||||||||..............");
 	?player((T+1) mod 2,Player);
+	.print("Ahora es el turno del ",Player,"      <<<<<<<<<<<<<<<<<<<<<<<<==========================>>>>>>>>>>>>>>>>>>>>>");
 	.send(Player,tell,tryAgain).
 	
 +exchange(X1,Y1,X2,Y2)[source(Source)] : 
@@ -332,9 +344,13 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	<-
 	.abolish(exchange(X1,Y1,X2,Y2));
 	.print("Recibin de ", Source, " a solicitude de intercambiar os steaks: ", X1, ", ",Y1," e ", X2, ", ",Y2," fora de turno.");
-	-+accionIlegal(Source).
+	.wait(3000);
+	-+accionIlegal(Source);
+	?movs(Source,M1);
+	.send(Source,tell,tryAgain).
 	
-+exchange(X1,Y1,X2,Y2)[source(Source)] <- .print("Algo va mal..........................................................................").
++exchange(X1,Y1,X2,Y2)[source(Source)] <- 
+	.print("Algo va mal??????????????????????????????????????????????????????????????????????").
 
 /********************************************************************/
 /********************   Comproba as accions   *******************/
@@ -583,19 +599,26 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	!reCheck.
 
 //Comproba todo o taboleiro para ver se se crearon agrupacios ao completar.	
-+!reCheck : sizeof(N) & reChecking <-
+
++!findSpecials(ListaEspeciales) <-
 /*Buscamos las piezas especiales*/
 	.findall(st(X,Y,C,3), figSquare(X,Y)&steak(C,X,Y),ListaGestores);
 	.findall(st(X,Y,C,1), (lineH(X,Y,C,X,L) & L > 3 & L < 5) | (lineV(X,Y,C,Y,L) & L > 3 & L < 5), ListaIps);
-	.findall(st(X,Y,C,2),  ( lineH(X,Y,C,X,L) & L > 4) | ( lineV(X,Y,C,Y,L) & L > 4), ListaCatedros);
-	.findall(st(X,Y,C,4), inT(X,Y,_,_,_)&steak(C,X,Y), ListaCompradores);
+	.findall(st(X,Y,C,2), (lineH(X,Y,C,X,L) & L > 4) | ( lineV(X,Y,C,Y,L) & L > 4), ListaCatedros);
+	.findall(st(X,Y,C,4), (inT(X,Y,X-1,Y-1,_) & steak(C,X,Y)), ListaCompradores);
 	.concat(ListaGestores,ListaIps,ListaCatedros,ListaCompradores,ListaEspeciales);
-	.print("Esta es la lista de piezas especiales encontradas: ",ListaEspeciales);
+	.print("Esta es la lista de piezas especiales encontradas: ",ListaEspeciales).
+
+
++!findToDelete(List) <-
 	.findall(todelete(Y,X), inSquare(X,Y,_,_) | ( lineH(X,Y,C,_,L) & L >2) | ( lineV(X,Y,C,_,L) & L >2) | inT(X,Y,_,_,_),List);
-	.print("Eliminables: ",List);
+	.print("Eliminables: ",List).
+
++!reCheck : sizeof(N) & reChecking <-
+	!findSpecials(ListaEspeciales);
 	.print("Esperamos para comprobar");
 	.wait(40);
-
+	!findToDelete(List)
 	.print("Comprobamos posibles combinacions xeradas automaticamente");
 	.abolish(reChecking);
 	/*for (.range(Y,0,N)) {
@@ -610,14 +633,23 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 			if(steak(C,X,Y)& not .member(st(X,Y,C,_),ListaEspeciales)){
 				//.print("------------Check: ", X, ",", Y); //Debug
 				//!checkForActions(C,X,Y);
+				if (special(X,Y,C,T)) {
+					+detectada;
+					.print("Detecta que la pieza es ESPECIALLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.");
+				}
 				!clearSteak(X,Y);
+				if (detectada) {
+					-detectada;
+					.print("Deberia haber eliminado la pieza especial:",special(X,Y,C,T),"  y realizado su efecto....................");
+				    .wait(2000);
+				};
 				//Aplicando técnicas de plegado y desplegado 
 				//optimizamos esta llamada y la dejamos como:
 				};
 			if (.member(st(X,Y,C,T),ListaEspeciales)) {
 				!promote(X,Y,T);
+				.print("Ahora se a�aden las nuevas piezas especiales......",ListaEspeciales);
 			}
-	
 	};
 	//.print("Caen las piezas superiores#@#@##@##@###@###@#@#@#@#@#@");
 	!moveSteaks;
@@ -633,6 +665,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 +!putSteak(X,Y,C,L) : promotionTo(1) <-
 	.print("La celda pasa a ser del player1----------------------------------------------------------------------------------------------");
     -special(X,Y,_,_);
+	.broadcast(untell,special(X,Y,_,_));
 	if (L==0) {
 		put(X,Y,C,-5);
 	} else{
@@ -641,20 +674,24 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.print(put(X,Y,C,-L));
 	if (L>0) {
 		+special(X,Y,C,L);
+		.broadcast(tell,special(X,Y,C,L));
 	}.
 	
 +!putSteak(X,Y,C,L) : promotionTo(2) <-
 	.print("La celda pasa a ser del player2------------------------------------------------------------------------");
     -special(X,Y,_,_);
+	.broadcast(untell,special(X,Y,_,_));
 	put(X,Y,-C,L);
 	.print(put(X,Y,-C,L));
 	if (L>0) {
 		+special(X,Y,C,L);
+		.broadcast(tell,special(X,Y,C,L));
 	}.
 
 +!putSteak(X,Y,C,L) : player(1,X,Y) <-
 	.print("La celda es del player1----------------------------------------------------------------------------------------------");
     -special(X,Y,_,_);
+	.broadcast(untell,special(X,Y,_,_));
 	if (L==0) {
 		put(X,Y,C,-5);
 	} else{
@@ -663,24 +700,29 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	.print(put(X,Y,C,-L));
 	if (L>0) {
 		+special(X,Y,C,L);
+		.broadcast(tell,special(X,Y,C,L));
 	}.
 	
 +!putSteak(X,Y,C,L) : player(2,X,Y) <-
 	.print("La celda es del player2------------------------------------------------------------------------");
     -special(X,Y,_,_);
+	.broadcast(untell,special(X,Y,_,_));
 	put(X,Y,-C,L);
 	.print(put(X,Y,-C,L));
 	if (L>0) {
 		+special(X,Y,C,L);
+		.broadcast(tell,special(X,Y,C,L));
 	}.
 
 +!putSteak(X,Y,C,L) <-
 	.print("La celda no es nadie-------------------------------------------------------------------------------------------------------");
     -special(X,Y,_,_);
+	.broadcast(untell,special(X,Y,_,_));
 	put(X,Y,C,L);
 	.print(put(X,Y,C,L));
 	if (L>0) {
 		+special(X,Y,C,L);
+		.broadcast(tell,special(X,Y,C,L));
 	}.
 
 +!removeSteak(X,Y) : steak(C,X,Y) <-
@@ -831,6 +873,7 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 //Sen ficha arriba -> Seguir mirando arriba
 +!moveOneSteak(X,Y) : not steak(_,X,Y) & Y > 0 & not steak(_,X,Y-1) <-
 	!moveOneSteak(X,Y-1);!downSteak(X,Y-1).
+	
 //Obstaculo arriba -> Baixar ficha diagonal
 +!moveOneSteak(X,Y) : not steak(_,X,Y) & steak(4,X,Y-1) & steak(C,X+1,Y-1) & Y > 1 & C > 4 <-
 	.print(X,":",Y);
@@ -844,19 +887,22 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 +!moveOneSteak(_,_).
 
 //Realiza a caida da ficha
-+!downSteak(X,Y) : steak(C,X,Y) & steak(_,X,Y+1) & steak(4,X-1,Y) & not steak(_,X-1,Y+1) & C > 4 & special(X,Y,C,L) <-	
++!downSteak(X,Y) : 	steak(C,X,Y) & steak(_,X,Y+1) & steak(4,X-1,Y) & 
+					not steak(_,X-1,Y+1) & C > 4 & special(X,Y,C,L) <-	
 	!putSteak(X-1,Y+1,C,L);
 	!removeSteak(X,Y).
 	
-+!downSteak(X,Y) : steak(C,X,Y) & steak(_,X,Y+1) & steak(4,X-1,Y) & not steak(_,X-1,Y+1) & C > 4 <-	
++!downSteak(X,Y) : 	steak(C,X,Y) & steak(_,X,Y+1) & steak(4,X-1,Y) & 
+					not steak(_,X-1,Y+1) & C > 4 <-	
 	!putSteak(X-1,Y+1,C,0);
 	!removeSteak(X,Y).
 	
-+!downSteak(X,Y) : steak(C,X,Y) & not steak(_,X,Y+1) & C > 4 & special(X,Y,C,L) <-	
++!downSteak(X,Y) : 	steak(C,X,Y) & not steak(_,X,Y+1) & C > 4 & 
+					special(X,Y,C,L) <-	
 	!putSteak(X,Y+1,C,L);
 	!removeSteak(X,Y).
 	
-+!downSteak(X,Y) : steak(C,X,Y) & not steak(_,X,Y+1) & C > 4 <-	
++!downSteak(X,Y) : 	steak(C,X,Y) & not steak(_,X,Y+1) & C > 4 <-	
 	!putSteak(X,Y+1,C,0);
 	!removeSteak(X,Y).
 	
@@ -906,29 +952,30 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 	?player(0,Player1);
 	+pointsMov(Player1,0);
 	?pointsMov(Player1,Pt1);
-	.print("Puntos del Player:", Player1,": ",Pt1);
+	.print("Puntos del ", Player1,": ",Pt1);
 	?player(1,Player2);
 	+pointsMov(Player2,0);
 	?pointsMov(Player2,Pt2);
-	.print("Puntos del Player:", Player2,": ",Pt2).
+	.print("Puntos del ", Player2,": ",Pt2);
+	.wait(300).
 	
-+!addPuntos(Pt) : turn(0) & player(0,player1) <-//& movs(player1,Mov) & points(player1,Mov,Points) & Points > -1 <-
-	//getPuntos(Puntos);
++!addPuntos(Pt) : turn(0) & player(0,player1) <-
 	.print("Estamos en el turno 0 y juega el Player 1.");
 	?pointsMov(player1,Points);
-	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
 	-pointsMov(player1,Points);
 	+pointsMov(player1,Points+Pt);
+	.print("Acualizados los puntos en el movimiento........");
 	?pointsMov(player1,P);
 	.print("O xogador player1 leva acumulados despois do movemento un Total de: ",P," puntos] ").
 
-+!addPuntos(Pt) : turn(1) & player(1,player2) <-//& movs(player1,Mov) & points(player1,Mov,Points) & Points > -1 <-
-	//getPuntos(Puntos);
++!addPuntos(Pt) : turn(1) & player(1,player2) <-
 	.print("Estamos en el turno 1 y juega el Player 2.");
 	?pointsMov(player2,Points);
-	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+	.print("A sumar puntos;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;PLAYER2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
 	-pointsMov(player2,Points);
 	+pointsMov(player2,Points+ Pt);
+	.print("Acualizados los puntos en el movimiento........");
 	?pointsMov(player2,P);
 	.print("O xogador player2 leva acumulados despois do movemento un Total de: ",P," puntos] ").
 
@@ -944,12 +991,14 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 
 +!updatePoints : 	turn(0) & player(0,player1) & points(player1,Pt) & pointsMov(player1, PtMov) <-
 	-points(player1,Pt);
-	-+pointsMov(player1,0);
+	-pointsMov(player1,_);
+	+pointsMov(player1,0);
 	+points(player1,Pt+PtMov).
 
 +!updatePoints : turn(1) & player(1,player2) & points(player2,Pt)  & pointsMov(player2, PtMov) <-
 	-points(player2,Pt);
-	-+pointsMov(player2,0);
+	-pointsMov(player2,_);
+	+pointsMov(player2,0);
 	+points(player2,Pt+PtMov).
 
 +!getPuntos(P1,P2) <-
@@ -964,12 +1013,12 @@ mapa1([[ 17, 33, 17, 32, 64, 64, 16, 33,513,257],
 +!addMov :  turn(0) & player(0,player1) & movs(player1,Movs) <-
 	-movs(player1,Movs);
 	+movs(player1,Movs + 1);
-	.print("O xogador player1 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))").
+	.print("O xogador player1 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))");.wait(1000).
 		
-+!addMov :  turn(1) & player(1,player2) & movs(player1,Movs) <-
++!addMov :  turn(1) & player(1,player2) & movs(player2,Movs) <-
 	-movs(player2,Movs);
 	+movs(player2,Movs + 1);
-	.print("O xogador player2 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))").
+	.print("O xogador player2 leva feitos ",Movs+1, " MOVEMENTOS.  )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))");.wait(1000).
 		
 	
 +!addMov <- .print("ESTAMOS EN PROBLEMASSSSSSSSSSSSSSSSSSS").
