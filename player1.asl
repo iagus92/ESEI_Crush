@@ -145,7 +145,7 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 		}else{
 			.send(judge,tell,exchange(X1,Y1,X2,Y2)); -+flag(1)
 		}.			
-		
+
 // Intercambio con especial para fila de 3 por la izquierda.
 +!intercambiarEsp(T) : flag(0) & contiguas3H(C,X1,X2,Y,Y) & steak(_,X1-1,Y) & tresIzda(C,X1,Y,NewX,NewY) & especial3HI(C,T,X1,Y)
 	<- .print("-----SOLICITA intercambio ESP 3 izquierda------");
@@ -174,7 +174,7 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 		}.
 		
 // Intercambio con especial para columna de 3 por arriba.
-+!intercambiarEsp(T) : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & especial3VAr(C,T,X,Y1)
++!intercambiarEsp(T) : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y1-1) & tresArriba(C,X,Y1,NewX,NewY) & especial3VAr(C,T,X,Y1)
 	<-	.print("-----SOLICITA intercambio ESP 3 arriba------");
 		if((special(X2-1,Y1-1,C,T) & NX = X2-1 & NY = Y1-1) | (special(X2,Y1-2,C,T) & NX = X2 & NY = Y1-2) | (special(X1+1,Y1-1,C,T) & NX = X2+1 & NY = Y1-1)){
 			.send(judge,tell,exchange(X,Y1-1,NX,NY)); -+flag(1)
@@ -250,7 +250,7 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 	   .send(judge,tell,exchange(X,Y2+1,NewX,NewY)); -+flag(1).
 	
 // Intercambio para columna de 3 por arriba.
-+!intercambiar : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X2,Y1-1) & tresArriba(C,X,Y1,NewX,NewY)
++!intercambiar : flag(0) & contiguas3V(C,X,X,Y1,Y2) & steak(_,X,Y1-1) & tresArriba(C,X,Y1,NewX,NewY)
 	<- .print("-----SOLICITA intercambio 3 arriba------");
 	   .send(judge,tell,exchange(X,Y1-1,NewX,NewY)); -+flag(1).	   
 
@@ -273,8 +273,12 @@ cuadradoEsp4(C,T,X,Y) :- special(X,Y,C,T) | special(X+1,Y,C,T) | special(X+1,Y-1
 	+obstacle(X,Y).
 
 // Llama al plan intercambiar.
-+canExchange(N) : player(N) <- .wait(100);
-	-canExchange(N)[source(S)]; !buscarCombinacion.
++canExchange(M) : player(N) <- .wait(100);
+	if(special(X,Y,C,T)){
+		.abolish(special(_,_,_,_));
+	}
+	-canExchange(M)[source(S)];
+	if(N==M){ !buscarCombinacion }.
 	
 +tryAgain <- .wait(100);
 	 -tryAgain[source(S)]; !buscarCombinacion.
